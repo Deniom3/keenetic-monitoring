@@ -104,30 +104,39 @@ if __name__ == '__main__':
 
     metrics = metrics_configuration['metrics']
 
-    config = configparser.ConfigParser(interpolation=None)
-    config_path = pwd + "/config/config.ini"
-    config.read(config_path)
-
     writers = []
-    if config.has_section('influx2') and config.getboolean('influx2', 'enabled', fallback=False):
-        writers.append(InfuxWriter(config['influx2'], config_path))
-    if config.has_section('prometheus') and config.getboolean('prometheus', 'enabled', fallback=False):
-        writers.append(PrometheusWriter(config['prometheus']))
+    if os.getenv('INFLUX2_ENABLED', 'false').lower() == 'true':
+        writers.append(InfuxWriter({
+            'enabled': True,
+            'url': os.getenv('INFLUX2_URL'),
+            'org': os.getenv('INFLUX2_ORG'),
+            'bucket': os.getenv('INFLUX2_BUCKET'),
+            'token': os.getenv('INFLUX2_TOKEN')
+        }, None))
+    if os.getenv('PROMETHEUS_ENABLED', 'false').lower() == 'true':
+        writers.append(PrometheusWriter({
+            'expose_port': os.getenv('PROMETHEUS_EXPOSE_PORT', '9100')
+        }))
     
     if not writers:
         logging.warning("No exporters enabled - both influx2 and prometheus are disabled")
 
-    keenetic_config = config['keenetic']
+    keenetic_config = {
+        'admin_endpoint': os.getenv('KEENETIC_ADMIN_ENDPOINT'),
+        'skip_auth': os.getenv('KEENETIC_SKIP_AUTH', 'false').lower() == 'true',
+        'login': os.getenv('KEENETIC_LOGIN'),
+        'password': os.getenv('KEENETIC_PASSWORD')
+    }
     logging.info("Connecting to router: " + keenetic_config['admin_endpoint'])
 
     collectors = []
-    with KeeneticClient(keenetic_config['admin_endpoint'], keenetic_config.getboolean('skip_auth'),
+    with KeeneticClient(keenetic_config['admin_endpoint'], keenetic_config['skip_auth'],
                         keenetic_config['login'], keenetic_config['password']) as kc:
         for metric_configuration in metrics:
             logging.info("Configuring metric: " + metric_configuration['command'])
             collectors.append(KeeneticCollector(kc, metric_configuration))
 
-        wait_interval = config['collector'].getint('interval_sec')
+        wait_interval = int(os.getenv('COLLECTOR_INTERVAL_SEC', '120'))
         logging.info(f"Configuration done. Start collecting with interval: {wait_interval} sec")
         while True:
             try:

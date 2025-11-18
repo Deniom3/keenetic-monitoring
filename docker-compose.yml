@@ -2,9 +2,9 @@ services:
   keenetic-monitoring:
     build: .
     container_name: keenetic-monitoring
-    volumes:
-      - ./config/config.ini:/home/config/config.ini:ro
-      - ./config/metrics.json:/home/config/metrics.json:ro
+    env_file:
+      - .env
+#    volumes:
+#      - ./config/metrics.json:/home/config/metrics.json:ro
     ports:
       - 9100:9100
-    restart: always

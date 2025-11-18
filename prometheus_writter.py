@@ -13,7 +13,6 @@ class PrometheusWriter:
         self._metrics = {}  # Словарь для хранения метрик
         self._app = Flask(__name__)
         self._port = int(config.get('expose_port', 9100))
-        self._scrape_interval = int(config.get('scrape_interval', 30))
         
         @self._app.route('/metrics')
         def metrics():

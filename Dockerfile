@@ -9,5 +9,6 @@ COPY --from=dependencies /usr/local/lib/python3.8/site-packages /usr/local/lib/p
 COPY value_normalizer.py keenetic_monitoring.py influxdb_writter.py keenetic_api.py prometheus_writter.py /home/
 ENV PYTHONPATH=/home
 COPY config/metrics.json /home/config/metrics.json
+COPY .env /home/.env
 
 CMD [ "python", "-u", "/home/keenetic_monitoring.py" ]
