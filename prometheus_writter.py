@@ -4,6 +4,7 @@ from threading import Thread
 from typing import List, Dict
 import time
 import json
+from waitress import serve
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class PrometheusWriter:
         self._server_thread.start()
 
     def _run_server(self):
-        self._app.run(host='0.0.0.0', port=self._port)
+        serve(self._app, host='0.0.0.0', port=self._port)
 
     def write_metrics(self, metrics: List[Dict]):
         """Convert metrics to Prometheus format and store/update them"""
