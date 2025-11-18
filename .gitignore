@@ -4,3 +4,4 @@ __pycache__
 config/config.ini
 _data
 .roo
+.vscode
