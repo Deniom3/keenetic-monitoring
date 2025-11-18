@@ -1,4 +1,4 @@
-import configparser
+мimport configparser
 import json
 import logging
 import os
@@ -8,6 +8,7 @@ from typing import Dict, List
 from jsonpath_rw import parse
 
 from influxdb_writter import InfuxWriter
+from prometheus_writter import PrometheusWriter
 from keenetic_api import KeeneticClient, KeeneticApiException
 from value_normalizer import normalize_value
 
@@ -67,10 +68,11 @@ class KeeneticCollector(object):
                     values[valueName] = normalize_value(value)
 
             if values.__len__() == 0:
+                logging.warning(f"No values collected for command: {self._command}, tags: {tags}")
                 continue
 
             metric = self.create_metric(self._command, tags, values)
-            # print(json.dumps(metric))
+            logging.debug(f"Collected metric: {json.dumps(metric)}")
             metrics.append(metric)
 
         metrics.append(
@@ -96,7 +98,7 @@ class KeeneticCollector(object):
 
 
 if __name__ == '__main__':
-    logging.info("\n\n" + "  _  __                    _   _         _____      _ _           _             \n | |/ /                   | | (_)       / ____|    | | |         | |            \n | ' / ___  ___ _ __   ___| |_ _  ___  | |     ___ | | | ___  ___| |_ ___  _ __🇺🇦  🇺🇦  🇺🇦 \n |  < / _ \/ _ \ '_ \ / _ \ __| |/ __| | |    / _ \| | |/ _ \/ __| __/ _ \| '__|\n | . \  __/  __/ | | |  __/ |_| | (__  | |___| (_) | | |  __/ (__| || (_) | |   \n |_|\_\___|\___|_| |_|\___|\__|_|\___|  \_____\___/|_|_|\___|\___|\__\___/|_|   \n\n")
+    logging.info("\n\n" + "  _  __                    _   _         _____      _ _           _             \n | |/ /                   | | (_)       / ____|    | | |         | |            \n | ' / ___  ___ _ __   ___| |_ _  ___  | |     ___ | | | ___  ___| |_ ___  _ __     \n |  < / _ \/ _ \ '_ \ / _ \ __| |/ __| | |    / _ \| | |/ _ \/ __| __/ _ \| '__|\n | . \  __/  __/ | | |  __/ |_| | (__  | |___| (_) | | |  __/ (__| || (_) | |   \n |_|\_\___|\___|_| |_|\___|\__|_|\___|  \_____\___/|_|_|\___|\___|\__\___/|_|   \n\n")
     pwd = os.path.dirname(os.path.realpath(__file__))
     metrics_configuration = json.load(open(pwd + "/config/metrics.json", "r"))
 
@@ -106,7 +108,14 @@ if __name__ == '__main__':
     config_path = pwd + "/config/config.ini"
     config.read(config_path)
 
-    infuxdb_writer = InfuxWriter(config['influx2'], config_path)
+    writers = []
+    if config.has_section('influx2') and config.getboolean('influx2', 'enabled', fallback=False):
+        writers.append(InfuxWriter(config['influx2'], config_path))
+    if config.has_section('prometheus') and config.getboolean('prometheus', 'enabled', fallback=False):
+        writers.append(PrometheusWriter(config['prometheus']))
+    
+    if not writers:
+        logging.warning("No exporters enabled - both influx2 and prometheus are disabled")
 
     keenetic_config = config['keenetic']
     logging.info("Connecting to router: " + keenetic_config['admin_endpoint'])
@@ -124,7 +133,8 @@ if __name__ == '__main__':
             try:
                 for collector in collectors:
                     metrics = collector.collect()
-                    infuxdb_writer.write_metrics(metrics)
+                    for writer in writers:
+                        writer.write_metrics(metrics)
             except Exception as e:
                 logging.error(f"Collector failed. Reason: {e}")
 
