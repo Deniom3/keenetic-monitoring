@@ -33,9 +33,9 @@ class PrometheusWriter:
         
         for metric in metrics:
             # Формируем имя метрики, сохраняя префикс но убирая пробелы
-            name = metric['measurement'].replace(' ', '_').replace('.', '_')
+            name = metric['measurement'].replace(' ', '_').replace('.', '_').replace('-', '_')
             labels = ','.join(
-                f'{k}="{v.replace(" ", "_") if v is not None else ""}"'  # Заменяем пробелы и обрабатываем None
+                f'{k.replace("-", "_")}="{v.replace(" ", "_").replace("-", "_") if v is not None else ""}"'  # Заменяем пробелы, дефисы и обрабатываем None
                 for k, v in metric['tags'].items()
             )
             if labels:
