@@ -46,8 +46,8 @@ class PrometheusWriter:
             for field, value in metric['fields'].items():
                 # Создаем уникальный ключ для метрики (имя + лейблы)
                 metric_key = f'{name}_{field}{labels}'
-                # Обновляем метрику с текущим временем
-                self._metrics[metric_key] = f'{metric_key} {value} {current_time}'
+                # Обновляем метрику только со значением (без timestamp)
+                self._metrics[metric_key] = f'{metric_key} {value}'
                 logger.debug(f"Updated metric: {metric_key}")
                 
         logger.info(f"Processed {len(metrics)} metrics, total stored: {len(self._metrics)}")
