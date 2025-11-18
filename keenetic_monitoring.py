@@ -62,13 +62,18 @@ class KeeneticCollector(object):
                 else:
                     tags[tagName] = self.get_first_value(tagPath.find(root.value))
 
+            # Пропускаем некорректные записи
+            if (self._command == "interface" and (tags.get('description') is None and tags.get('address') is None)) or \
+               (self._command == "processes" and (tags.get('name') is None or tags.get('pid') == -1)):
+                continue
+
             for valueName, valuePath in self._values.items():
                 value = self.get_first_value(valuePath.find(root.value))
                 if value is not None:
                     values[valueName] = normalize_value(value)
 
             if values.__len__() == 0:
-                logging.warning(f"No values collected for command: {self._command}, tags: {tags}")
+                logging.debug(f"No values collected for command: {self._command}, tags: {tags}")
                 continue
 
             metric = self.create_metric(self._command, tags, values)

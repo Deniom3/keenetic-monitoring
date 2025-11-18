@@ -44,10 +44,17 @@ class PrometheusWriter:
                 labels = ""
                 
             for field, value in metric['fields'].items():
+                # Заменяем дефисы в именах полей на подчеркивания
+                field_name = field.replace('-', '_')
                 # Создаем уникальный ключ для метрики (имя + лейблы)
-                metric_key = f'{name}_{field}{labels}'
-                # Обновляем метрику только со значением (без timestamp)
-                self._metrics[metric_key] = f'{metric_key} {value}'
+                metric_key = f'{name}_{field_name}{labels}'
+                # Преобразуем значение в число, если это строка
+                try:
+                    numeric_value = float(value) if isinstance(value, str) else value
+                    # Обновляем метрику только со значением (без timestamp)
+                    self._metrics[metric_key] = f'{metric_key} {numeric_value}'
+                except ValueError:
+                    logger.warning(f"Skipping invalid metric value: {metric_key}={value}")
                 logger.debug(f"Updated metric: {metric_key}")
                 
         logger.info(f"Processed {len(metrics)} metrics, total stored: {len(self._metrics)}")
