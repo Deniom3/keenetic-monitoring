@@ -32,8 +32,12 @@ class PrometheusWriter:
         current_time = int(time.time() * 1000)  # Текущая метка времени
         
         for metric in metrics:
-            name = metric['measurement'].replace('.', '_')
-            labels = ','.join(f'{k}="{v}"' for k, v in metric['tags'].items())
+            # Формируем имя метрики, сохраняя префикс но убирая пробелы
+            name = metric['measurement'].replace(' ', '_').replace('.', '_')
+            labels = ','.join(
+                f'{k}="{v.replace(" ", "_") if v is not None else ""}"'  # Заменяем пробелы и обрабатываем None
+                for k, v in metric['tags'].items()
+            )
             if labels:
                 labels = f"{{{labels}}}"
             else:
