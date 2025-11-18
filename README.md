@@ -1,8 +1,8 @@
-# Keenetic Monitoring with Prometheus/InfluxDB
+# Универсальный мониторинг устройств Keenetic
 
-## Configuration
+## Конфигурация
 
-By default both exporters are disabled. Enable them in config.ini:
+Поддерживаются следующие экспортеры метрик (можно включать/отключать в config.ini):
 
 ```ini
 [influx2]
@@ -17,25 +17,15 @@ enabled=true
 expose_port=9100
 ```
 
-## Running with Docker
+## Запуск с Docker
 
-1. For Prometheus, update docker-compose.yml:
-```yaml
-services:
-  prometheus:
-    image: prom/prometheus
-    ports:
-      - 9090:9090
-    volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
-```
-
-2. Start services:
+1. Обновите docker-compose.yml при необходимости
+2. Запустите сервис:
 ```bash
 docker-compose up -d
 ```
 
-## Access Metrics
+## Доступ к метрикам
 - Prometheus: `http://localhost:9090`
-- Metrics endpoint: `http://localhost:9100/metrics`
-- InfluxDB UI: `http://localhost:8086`
+- Конечная точка метрик: `http://localhost:9100/metrics`
+- InfluxDB UI: `http://localhost:8086` (если включен)

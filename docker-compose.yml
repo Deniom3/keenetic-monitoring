@@ -1,11 +1,7 @@
-version: '3.7'
-
 services:
-  keenetic-grafana-monitoring:
+  keenetic-monitoring:
     build: .
-    container_name: keenetic-grafana-monitoring
-    environment:
-      - TZ=Europe/Simferopol
+    container_name: keenetic-monitoring
     volumes:
       - ./config/config.ini:/home/config/config.ini:ro
       - ./config/metrics.json:/home/config/metrics.json:ro
